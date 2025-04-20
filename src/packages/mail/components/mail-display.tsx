@@ -22,10 +22,12 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Message } from "@/entities/Message";
+import { useVisible } from "@/hooks/useVisible";
 import { cn } from "@/lib/utils";
 import { useAppSelector } from "@/redux/hooks";
 import { useQueryClient } from "@tanstack/react-query";
 import { addDays, addHours, format, nextSaturday } from "date-fns";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 import {
   Archive,
@@ -37,7 +39,8 @@ import {
   ReplyAll,
   Trash2,
 } from "lucide-react";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { faCloud } from "@fortawesome/free-solid-svg-icons";
 
 interface MessagesListProps {
   messages: Message[] | null;
@@ -46,9 +49,11 @@ interface MessagesListProps {
 
 export function MessagesList({ messages, chat }: MessagesListProps) {
   const { invalidateQueries } = useQueryClient();
+  const isOpenAI = useVisible();
 
   const [resposneMessage, setResponseMessage] = useState("");
   const [loading, setLoading] = useState(false);
+  const [style, setStyle] = useState("formal");
 
   const userId = useAppSelector((state) => state.user.user?._id);
 
@@ -72,9 +77,39 @@ export function MessagesList({ messages, chat }: MessagesListProps) {
     }
   };
 
-  if (!chat) return null;
-
   const fullName = `${chat?.firstName} ${chat?.lastName}`;
+
+  const handleGenerateTempalte = async () => {
+    const clientMessages = messages?.filter((item) => item.exteranlSenderEmail);
+    const lastMessage = clientMessages?.[clientMessages.length - 1]?.message;
+
+    const response = await messageService.generateEmailTemplateByAI({
+      currentEmail: resposneMessage,
+      exampleEmail: lastMessage || "",
+      style,
+    });
+
+    if (response.data.data) {
+      setResponseMessage(response.data.data);
+      isOpenAI.hide();
+    }
+  };
+
+  const handleKeyPress = (event: KeyboardEvent) => {
+    if (event.key === "Enter" && isOpenAI.visible) {
+      handleGenerateTempalte();
+    }
+  };
+
+  useEffect(() => {
+    document.addEventListener("keypress", handleKeyPress);
+
+    return () => {
+      document.removeEventListener("keypress", handleKeyPress);
+    };
+  }, [isOpenAI.visible]);
+
+  if (!chat) return null;
 
   return (
     <div className="flex  h-full flex-col">
@@ -271,12 +306,47 @@ export function MessagesList({ messages, chat }: MessagesListProps) {
       <div className="p-4">
         <form>
           <div className="grid gap-4">
-            <Textarea
-              className="p-4"
-              placeholder={`Reply ...`}
-              value={resposneMessage}
-              onChange={(e) => setResponseMessage(e.target.value)}
-            />
+            <div className="relative">
+              <Textarea
+                className="p-4"
+                placeholder={`Reply ...`}
+                value={resposneMessage}
+                onChange={(e) => setResponseMessage(e.target.value)}
+              />
+
+              <div className="absolute flex flex-col bottom-[15px] left-[15px] text-[#00A1B3] cursor-pointer bg-n-8 ml-[-5px]">
+                {isOpenAI.visible && (
+                  <div className="flex gap-[8px] items-center border border-n-167 py-[8px] px-[12px] rounded-[8px] text-n-183 bg-neutral-500 ">
+                    <FontAwesomeIcon
+                      icon={faCloud}
+                      color="#53A669"
+                      className="max-w-[16px]"
+                    />
+                    Create this message using a
+                    <input
+                      type="text"
+                      className="bg-[#5200FF1A] max-w-[90px] px-[8px] py-[2px] w-full rounded-[8px]"
+                      value={style}
+                      onChange={(e) => setStyle(e.target.value)}
+                    />
+                    style
+                  </div>
+                )}
+
+                <div
+                  className="flex gap-1 items-center"
+                  onClick={isOpenAI.toggle}
+                >
+                  <FontAwesomeIcon
+                    icon={faCloud}
+                    color="#53A669"
+                    className="max-w-[16px]"
+                  />
+                  AI
+                </div>
+              </div>
+            </div>
+
             <div className="flex items-center">
               <Button
                 onClick={(e) => {

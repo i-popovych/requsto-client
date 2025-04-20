@@ -35,35 +35,11 @@ const processQueue = (error: any, token: Token | null = null) => {
 $baseAPI.interceptors.response.use(
   async (response) => response,
   async (error) => {
-    const originalRequest = error.config;
-
-    // if (error.response.status === 401 && !originalRequest._isRetry) {
-    //   if (isRefreshing) {
-    //     return new Promise<any>((resolve, reject) => {
-    //       failedQueue.push({ resolve, reject });
-    //     });
-    //   }
-
-    //   originalRequest._isRetry = true;
-    //   isRefreshing = true;
-
-    //   try {
-    //     const { data } = await axios.get<Token>(`${BASE_URL}/refresh`, {
-    //       withCredentials: true,
-    //     });
-
-    //     authStorage.setTokens(data.authorizationToken, data.refreshToken);
-    //     originalRequest.headers.Authorization = 'Bearer ' + data.authorizationToken;
-    //     processQueue(null, data);
-    //     return await $baseAPI(originalRequest);
-    //   } catch (e) {
-    //     processQueue(e, null);
-    //     alert('You are not authorized');
-    //     return Promise.reject(e);
-    //   } finally {
-    //     isRefreshing = false;
-    //   }
-    // }
+    if (error.response.status === 401) {
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("user");
+      localStorage.removeItem("persist:root");
+    }
 
     return Promise.reject(error);
   }

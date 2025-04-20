@@ -8,9 +8,22 @@ type SendResposeMessage = {
   message: string;
 };
 
+type GenerateResponseMessage = {
+  style: string;
+  exampleEmail: string;
+  currentEmail: string;
+};
+
 class MessageService {
   getChatMessages() {
     return $baseAPI.get<ChatResponse>(`v1/chat/company`);
+  }
+
+  generateEmailTemplateByAI(payload: GenerateResponseMessage) {
+    return $baseAPI.post<{ data: string }>(
+      `v1/chat/generate-email-response`,
+      payload
+    );
   }
 
   sendResponseMessage(payload: SendResposeMessage) {
