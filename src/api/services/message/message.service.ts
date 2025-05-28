@@ -14,6 +14,12 @@ type GenerateResponseMessage = {
   currentEmail: string;
 };
 
+type UpdateChatSettingsDto = {
+  isAnswerAutomatically: boolean;
+
+  chatId: string;
+};
+
 class MessageService {
   getChatMessages() {
     return $baseAPI.get<ChatResponse>(`v1/chat/company`);
@@ -28,6 +34,10 @@ class MessageService {
 
   sendResponseMessage(payload: SendResposeMessage) {
     return $baseAPI.post<ChatResponse>(`v1/chat/response`, payload);
+  }
+
+  toggleAutomatedResponse(payload: UpdateChatSettingsDto) {
+    return $baseAPI.patch<ChatResponse>(`v1/chat/settings`, payload);
   }
 }
 

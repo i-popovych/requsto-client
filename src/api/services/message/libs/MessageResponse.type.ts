@@ -13,6 +13,7 @@ export interface ChatResponseItem {
   _id: string;
   createdAt: string;
   updatedAt: string;
+  autoResponse: boolean;
 }
 
 export interface ChatResponse {

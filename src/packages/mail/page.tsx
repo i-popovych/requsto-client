@@ -1,6 +1,6 @@
 import { messageService } from "@/api/services/message/message.service";
 import { Mail } from "@/packages/mail/components/mail";
-import { accounts, mails } from "@/packages/mail/data";
+import { accounts } from "@/packages/mail/data";
 import { useQuery } from "@tanstack/react-query";
 
 const labels_list = ["meeting", "work", "important", "personal", "social"];
@@ -15,7 +15,6 @@ export default function MailPage() {
     queryFn: () => messageService.getChatMessages(),
     queryKey: ["chat"],
   });
-  console.log("🚀 ~ MailPage ~ data:", data);
 
   const threadDto = isFetching
     ? []
